@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+// Modelo Usuario
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  role         String        @default("USER") // Valores permitidos: "ADMIN", "USER"
+  transactions Transaction[]
+  reports      Report[]
+  conversions  Conversion[]
+}
+
+// Modelo Criptomoneda
+model Cryptocurrency {
+  id                     Int                @id @default(autoincrement())
+  symbol                 String             @unique
+  name                   String
+  marketValue            Float
+  originTransactions     Transaction[]      @relation("OriginCurrency")
+  destinationTransactions Transaction[]    @relation("DestinationCurrency")
+  originHistories        ChangeHistory[]    @relation("OriginHistoryCurrency")
+  destinationHistories   ChangeHistory[]    @relation("DestinationHistoryCurrency")
+  originConversions      Conversion[]       @relation("OriginConversionCurrency")
+  destinationConversions Conversion[]       @relation("DestinationConversionCurrency")
+}
+
+// Modelo Transacción
+model Transaction {
+  id                    Int                @id @default(autoincrement())
+  type                  String             @default("COMPRA") // Valores permitidos: "COMPRA", "VENTA"
+  amount                Float
+  date                  DateTime           @default(now())
+  exchangeRate          Float
+  originCurrency        Cryptocurrency     @relation("OriginCurrency", fields: [originCurrencyId], references: [id])
+  originCurrencyId      Int
+  destinationCurrency   Cryptocurrency     @relation("DestinationCurrency", fields: [destinationCurrencyId], references: [id])
+  destinationCurrencyId Int
+  user                  User               @relation(fields: [userId], references: [id])
+  userId                Int
+}
+
+// Modelo Historial de Cambio
+model ChangeHistory {
+  id                     Int                @id @default(autoincrement())
+  date                   DateTime           @default(now())
+  amount                 Float
+  originCurrency         Cryptocurrency     @relation("OriginHistoryCurrency", fields: [originCurrencyId], references: [id])
+  originCurrencyId       Int
+  destinationCurrency    Cryptocurrency     @relation("DestinationHistoryCurrency", fields: [destinationCurrencyId], references: [id])
+  destinationCurrencyId  Int
+  result                 Float
+}
+
+// Modelo Reporte
+model Report {
+  id                 Int      @id @default(autoincrement())
+  graphType          String   @default("LINEA") // Valores permitidos: "LINEA", "BARRAS", "CIRCULAR"
+  transactionVolume  Int
+  startDate          DateTime
+  endDate            DateTime
+  user               User     @relation(fields: [userId], references: [id])
+  userId             Int
+}
+
+// Modelo Conversión de Moneda
+model Conversion {
+  id                     Int                @id @default(autoincrement())
+  amount                 Float
+  originCurrency         Cryptocurrency     @relation("OriginConversionCurrency", fields: [originCurrencyId], references: [id])
+  originCurrencyId       Int
+  destinationCurrency    Cryptocurrency     @relation("DestinationConversionCurrency", fields: [destinationCurrencyId], references: [id])
+  destinationCurrencyId  Int
+  result                 Float
+  user                   User               @relation(fields: [userId], references: [id])
+  userId                 Int
+}
