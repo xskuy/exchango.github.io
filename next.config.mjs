@@ -13,7 +13,8 @@ const nextConfig = {
 	experimental: {
     serverActions: true,
     appDir: true,
-  },
+	},
+	reactStrictMode: true,
 };
 
 export default nextConfig;

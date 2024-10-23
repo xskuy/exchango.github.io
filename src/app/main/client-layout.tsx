@@ -2,33 +2,49 @@
 
 import { useState } from "react"
 import { useTheme } from "next-themes"
-import { Moon, Sun, Menu } from "lucide-react"
+import { Moon, Sun, Menu, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import Link from "next/link"
-import { buttonVariants } from "@/components/ui/button"
+import { signOut, useSession } from "next-auth/react"
+import { useRouter } from "next/navigation" // Añadido para redirecciones
 
-export default function LayoutClient({
+export default function ClientLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { setTheme, theme } = useTheme()
+  const { data: session, status } = useSession()
+  const router = useRouter()
 
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light")
   }
 
+  const handleSignOut = () => {
+    signOut({ 
+      callbackUrl: '/auth/login-page',
+      redirect: true
+    })
+  }
+
   const menuItems = [
-    { name: "Dashboard", href: "/" },
-    { name: "Gestión de Usuarios", href: "/users" },
-    { name: "Conversor de Monedas", href: "/converter" },
-    { name: "Historial de Cambio", href: "/history" },
-    { name: "Gestión de Transacciones", href: "/transactions" },
-    { name: "Reportes y Analítica", href: "/reports" },
-    { name: "Agregar Criptomonedas", href: "/add-crypto" },
+    { name: "Dashboard", href: "/main" },
+    { name: "Gestión de Usuarios", href: "/main/users" },
+    { name: "Conversor de Monedas", href: "/main/converter" },
+    { name: "Historial de Cambio", href: "/main/history" },
+    { name: "Gestión de Transacciones", href: "/main/transactions" },
+    { name: "Reportes y Analítica", href: "/main/reports" },
+    { name: "Agregar Criptomonedas", href: "/main/add-crypto" },
   ]
+
+  // Redirigir si el estado de la sesión es "unauthenticated"
+  if (status === "unauthenticated") {
+    router.push("/auth/login-page")
+    return null
+  }
 
   return (
     <div className="flex h-screen bg-background">
@@ -76,9 +92,14 @@ export default function LayoutClient({
             <Button variant="outline" size="icon" onClick={toggleTheme}>
               {theme === "light" ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
             </Button>
-            <Link href="/login-page" className={buttonVariants({ variant: "default" })}>
-              Iniciar Sesión
-            </Link>
+            <Button 
+              variant="destructive" 
+              onClick={handleSignOut}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar Sesión
+            </Button>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-6">
