@@ -10,21 +10,21 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Obtener el primer día del mes actual
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+
     const user = await prisma.user.findUnique({
       where: { email },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
+      include: {
         transactions: {
-          take: 5,  // Obtener solo las últimas 5 transacciones
-          orderBy: {
-            date: 'desc'
-          },
           include: {
             originCurrency: true,
             destinationCurrency: true,
+          },
+          orderBy: {
+            date: 'desc'
           }
         }
       }
@@ -34,7 +34,24 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    return NextResponse.json(user)
+    // Calcular estadísticas
+    const stats = {
+      mostBoughtCurrency: calculateMostBoughtCurrency(user.transactions),
+      largestTransaction: findLargestTransaction(user.transactions),
+      monthlyOperations: user.transactions.filter(t => 
+        new Date(t.date) >= startOfMonth
+      ).length,
+      favoriteConversion: calculateFavoriteConversion(user.transactions)
+    }
+
+    return NextResponse.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      transactions: user.transactions.slice(0, 5), // Solo las últimas 5 transacciones
+      stats: stats
+    })
   } catch (error) {
     console.error('Error fetching user:', error)
     return NextResponse.json(
@@ -44,3 +61,41 @@ export async function GET(request: Request) {
   }
 }
 
+function calculateMostBoughtCurrency(transactions: any[]) {
+  if (!transactions.length) return ['-', 0]
+  
+  const currencyCounts = transactions.reduce((acc, t) => {
+    const currency = t.destinationCurrency.symbol
+    acc[currency] = (acc[currency] || 0) + 1
+    return acc
+  }, {})
+
+  const sortedCurrencies = Object.entries(currencyCounts)
+    .sort(([,a], [,b]) => (b as number) - (a as number))
+
+  return sortedCurrencies[0] || ['-', 0]
+}
+
+function findLargestTransaction(transactions: any[]) {
+  if (!transactions.length) return null
+  
+  return transactions.reduce((largest, t) => {
+    const amount = t.amount * t.exchangeRate
+    return amount > (largest?.amount || 0) ? t : largest
+  }, null)
+}
+
+function calculateFavoriteConversion(transactions: any[]) {
+  if (!transactions.length) return ['-', 0]
+  
+  const conversionCounts = transactions.reduce((acc, t) => {
+    const key = `${t.originCurrency.symbol}→${t.destinationCurrency.symbol}`
+    acc[key] = (acc[key] || 0) + 1
+    return acc
+  }, {})
+
+  const sortedConversions = Object.entries(conversionCounts)
+    .sort(([,a], [,b]) => (b as number) - (a as number))
+
+  return sortedConversions[0] || ['-', 0]
+}
