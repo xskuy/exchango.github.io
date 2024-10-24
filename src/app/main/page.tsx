@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
@@ -27,8 +27,27 @@ const priceData = [
   { name: "Jul", BTC: 42000, ETH: 2700 },
 ]
 
-export default function Dashboard() { 
-  const [] = useState("overview")
+export default function Dashboard() {
+  const [dashboardData, setDashboardData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await fetch('/api/dashboard')
+        if (response.ok) {
+          const data = await response.json()
+          setDashboardData(data.stats)
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
@@ -48,21 +67,23 @@ export default function Dashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">45,231</div>
-                <p className="text-xs text-muted-foreground">
-                  +20.1% respecto al mes pasado
-                </p>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.totalUsers || 0}
+                </div>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Volumen de Transacciones</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Transacciones</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$5,231,890</div>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.totalTransactions || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +15% respecto a la semana pasada
+                  {dashboardData?.transactionChange > 0 ? '+' : ''}
+                  {dashboardData?.transactionChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -72,9 +93,12 @@ export default function Dashboard() {
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">1,234</div>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.activeTransactions || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +7% respecto a ayer
+                  {dashboardData?.transactionChange > 0 ? '+' : ''}
+                  {dashboardData?.transactionChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -84,9 +108,12 @@ export default function Dashboard() {
                 <Coins className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">32</div>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.totalCryptocurrencies || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +2 nuevas esta semana
+                  {dashboardData?.totalCryptocurrenciesChange > 0 ? '+' : ''}
+                  {dashboardData?.totalCryptocurrenciesChange?.toFixed(1)}% respecto a la semana pasada
                 </p>
               </CardContent>
             </Card>
@@ -176,9 +203,12 @@ export default function Dashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">+573</div>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.newUsers || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +201 comparado con ayer
+                  {dashboardData?.newUsersChange > 0 ? '+' : ''}
+                  {dashboardData?.newUsersChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -190,9 +220,12 @@ export default function Dashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$12,234,890</div>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.transactionsVolume || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +2.5% comparado con ayer
+                  {dashboardData?.transactionsVolumeChange > 0 ? '+' : ''}
+                  {dashboardData?.transactionsVolumeChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -204,9 +237,12 @@ export default function Dashboard() {
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">2,345</div>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.completedTransactions || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  +5.2% comparado con ayer
+                  {dashboardData?.completedTransactionsChange > 0 ? '+' : ''}
+                  {dashboardData?.completedTransactionsChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -218,9 +254,12 @@ export default function Dashboard() {
                 <Coins className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">BTC</div>
+                <div className="text-2xl font-bold">
+                  {loading ? "Cargando..." : dashboardData?.mostTradedCurrency || ''}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  45% del volumen total
+                  {dashboardData?.mostTradedCurrencyChange > 0 ? '+' : ''}
+                  {dashboardData?.mostTradedCurrencyChange?.toFixed(1)}% respecto a la semana pasada
                 </p>
               </CardContent>
             </Card>
