@@ -6,7 +6,7 @@ Esta es una aplicación de conversión de moneda que permite a los usuarios regi
 
 - Node.js (versión 14 o superior)
 - npm (normalmente viene con Node.js)
-- PostgreSQL
+- SLQlite
 
 ## Instalación
 
