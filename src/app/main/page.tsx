@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts"
-import { DollarSign, Users, Activity, Coins } from "lucide-react"
+import { DollarSign, Users, Activity, Coins, ArrowUpRight, ArrowDownLeft, Bitcoin } from "lucide-react"
 import { useSession } from 'next-auth/react';
+import { Button } from "@/components/ui/button"
 
 const volumeData = [
   { name: "Ene", BTC: 4000, ETH: 2400, USD: 2400 },
@@ -33,6 +34,12 @@ export default function Dashboard() {
   const [userName, setUserName] = useState<string>("User");
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
+  const [balance, setBalance] = useState(1234.56)
+  const [transactions, setTransactions] = useState([
+    { id: 1, type: 'received', amount: 100, currency: 'USD', from: 'Alice' },
+    { id: 2, type: 'sent', amount: 50, currency: 'USD', to: 'Bob' },
+    { id: 3, type: 'received', amount: 0.005, currency: 'BTC', from: 'Charlie' },
+  ])
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -92,6 +99,7 @@ export default function Dashboard() {
         <TabsList>
           <TabsTrigger value="overview">Vista General</TabsTrigger>
           <TabsTrigger value="analytics">Analítica</TabsTrigger>
+          <TabsTrigger value="wallet">Wallet</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -152,6 +160,94 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4">
+              <CardHeader>
+                <CardTitle>Mi Wallet</CardTitle>
+                <CardDescription>Dashboard de tu billetera digital</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">${balance.toFixed(2)}</div>
+                <div className="mt-4 flex space-x-2">
+                  <Button className="flex-1">
+                    <ArrowUpRight className="mr-2 h-4 w-4" /> Enviar
+                  </Button>
+                  <Button className="flex-1">
+                    <ArrowDownLeft className="mr-2 h-4 w-4" /> Recibir
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>Activos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <DollarSign className="mr-2 h-6 w-6" />
+                      <span>USD</span>
+                    </div>
+                    <span>${balance.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Bitcoin className="mr-2 h-6 w-6" />
+                      <span>BTC</span>
+                    </div>
+                    <span>0.0135 BTC</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Coins className="mr-2 h-6 w-6" />
+                      <span>ETH</span>
+                    </div>
+                    <span>0.25 ETH</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Transacciones Recientes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {transactions.map(transaction => (
+                  <div key={transaction.id} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {transaction.type === 'received' ? (
+                        <ArrowDownLeft className="mr-2 h-4 w-4 text-green-500" />
+                      ) : (
+                        <ArrowUpRight className="mr-2 h-4 w-4 text-red-500" />
+                      )}
+                      <div>
+                        <div className="font-medium">
+                          {transaction.type === 'received' ? 'Recibido de' : 'Enviado a'} {transaction.from || transaction.to}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date().toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="font-medium">
+                      {transaction.type === 'received' ? '+' : '-'}{transaction.amount} {transaction.currency}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+            <div className="p-6 pt-0">
+              <Button variant="outline" className="w-full">
+                Ver todas las transacciones
+              </Button>
+            </div>
+          </Card>
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
@@ -337,6 +433,95 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="wallet" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4">
+              <CardHeader>
+                <CardTitle>Mi Wallet</CardTitle>
+                <CardDescription>Dashboard de tu billetera digital</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-bold">${balance.toFixed(2)}</div>
+                <div className="mt-4 flex space-x-2">
+                  <Button className="flex-1">
+                    <ArrowUpRight className="mr-2 h-4 w-4" /> Enviar
+                  </Button>
+                  <Button className="flex-1">
+                    <ArrowDownLeft className="mr-2 h-4 w-4" /> Recibir
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>Activos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <DollarSign className="mr-2 h-6 w-6" />
+                      <span>USD</span>
+                    </div>
+                    <span>${balance.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Bitcoin className="mr-2 h-6 w-6" />
+                      <span>BTC</span>
+                    </div>
+                    <span>0.0135 BTC</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Coins className="mr-2 h-6 w-6" />
+                      <span>ETH</span>
+                    </div>
+                    <span>0.25 ETH</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Transacciones Recientes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {transactions.map(transaction => (
+                  <div key={transaction.id} className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {transaction.type === 'received' ? (
+                        <ArrowDownLeft className="mr-2 h-4 w-4 text-green-500" />
+                      ) : (
+                        <ArrowUpRight className="mr-2 h-4 w-4 text-red-500" />
+                      )}
+                      <div>
+                        <div className="font-medium">
+                          {transaction.type === 'received' ? 'Recibido de' : 'Enviado a'} {transaction.from || transaction.to}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date().toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="font-medium">
+                      {transaction.type === 'received' ? '+' : '-'}{transaction.amount} {transaction.currency}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+            <div className="p-6 pt-0">
+              <Button variant="outline" className="w-full">
+                Ver todas las transacciones
+              </Button>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
