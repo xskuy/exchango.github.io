@@ -5,9 +5,9 @@ const prisma = new PrismaClient()
 
 async function main() {
   try {
-    const email = 'usuario@ejemplo.com'
-    const name = 'Usuario de Prueba'
-    const password = 'contraseña123'
+    const email = 'benja@ejemplo.com'
+    const name = 'Benjamin'
+    const password = 'contraseña1'
     const role = 'USER'
 
     console.log('Hashing password...')

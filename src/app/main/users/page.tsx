@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, DollarSign, Bitcoin, ArrowUpDown, TrendingUp, Activity } from "lucide-react"
 

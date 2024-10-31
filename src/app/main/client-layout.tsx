@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import Link from "next/link"
 import { signOut, useSession } from "next-auth/react"
-import { useRouter } from "next/navigation" // Añadido para redirecciones
+import { useRouter, usePathname } from "next/navigation"
 
 export default function ClientLayout({
   children,
@@ -16,7 +16,7 @@ export default function ClientLayout({
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { setTheme, theme } = useTheme()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
 
   const toggleTheme = () => {
@@ -45,6 +45,11 @@ export default function ClientLayout({
     router.push("/auth/login-page")
     return null
   }
+
+  // Obtener el título de la página actual
+  const currentPath = usePathname()
+   const currentPage = menuItems.find(item => item.href === currentPath)
+   const pageTitle = currentPage ? currentPage.name : "Dashboard"
 
   return (
     <div className="flex h-screen bg-background">
@@ -87,7 +92,7 @@ export default function ClientLayout({
       </aside>
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="flex items-center justify-between px-6 py-4 bg-background border-b">
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold">{pageTitle}</h1>
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="icon" onClick={toggleTheme}>
               {theme === "light" ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
