@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { status } = useSession()
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -98,14 +98,6 @@ export default function LoginPage() {
           <div className="text-red-500 text-sm text-center">{error}</div>
         )}
 
-        <div className="flex items-center justify-between">
-          <div className="text-sm">
-            <Link href="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Forgot your password?
-            </Link>
-          </div>
-        </div>
-
         <div>
           <Button
             type="submit"
@@ -117,11 +109,8 @@ export default function LoginPage() {
         </div>
       </form>
       <div className="text-center">
-        <p className="mt-2 text-sm text-gray-600">
-          Not a member?{" "}
-          <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Start a 14 day free trial
-          </Link>
+        <p className="font-medium text-indigo-600 hover:text-indigo-500">
+          Si no puede acceder, contacte con soporte
         </p>
       </div>
     </div>

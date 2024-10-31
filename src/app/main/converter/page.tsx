@@ -18,16 +18,8 @@ type ExchangeRateResponse = {
   };
 };
 
-type HistoricalDataResponse = {
-  result: string;
-  conversion_rates: {
-    [date: string]: {
-      [currency: string]: number;
-    };
-  };
-};
 
-interface Conversion {
+interface Conversion {  
   id: number;
   amount: number;
   result: number;
@@ -75,35 +67,7 @@ export default function ConversorMonedas() {
       }
     };
 
-    const fetchHistoricalData = async () => {
-      const endDate = new Date();
-      const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const historicalRates = [];
-
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split("T")[0];
-        try {
-          const response = await fetch(`/api/historical-data?from=${fromCurrency}&to=${toCurrency}&date=${dateStr}`);
-          const data = await response.json();
-          if (data.result === "success") {
-            historicalRates.push({
-              date: data.date,
-              rate: data.rate,
-            });
-          } else {
-            console.error(`Error fetching data for ${dateStr}:`, data["error-type"]);
-          }
-        } catch (error) {
-          console.error(`Error fetching data for ${dateStr}:`, error);
-        }
-      }
-
-      historicalRates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      setHistoricalData(historicalRates);
-    };
-
     fetchExchangeRate();
-    fetchHistoricalData();
   }, [fromCurrency, toCurrency]);
 
   useEffect(() => {
@@ -336,17 +300,17 @@ export default function ConversorMonedas() {
           </div>
 
           {/* Historial de conversiones */}
-          <div className="mt-8 bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">Historial Reciente</h3>
+          <div className="mt-8 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Historial Reciente</h3>
             <div className="space-y-2">
               {conversions.map((conversion) => (
-                <div key={conversion.id} className="bg-white p-3 rounded shadow-sm">
-                  <div className="flex justify-between text-sm">
+                <div key={conversion.id} className="p-3 rounded shadow-sm bg-white dark:bg-gray-700">
+                  <div className="flex justify-between text-sm text-gray-900 dark:text-gray-100">
                     <span>
                       {conversion.amount} {conversion.originCurrency.symbol} → 
                       {conversion.result} {conversion.destinationCurrency.symbol}
                     </span>
-                    <span className="text-gray-500">
+                    <span className="text-gray-500 dark:text-gray-400">
                       {new Date(conversion.createdAt).toLocaleDateString()}
                     </span>
                   </div>
@@ -356,12 +320,12 @@ export default function ConversorMonedas() {
           </div>
 
           {/* Historial de transacciones */}
-          <div className="mt-8 bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">Historial de Compras</h3>
+          <div className="mt-8 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Historial de Compras</h3>
             <div className="space-y-2">
               {transactions.map((transaction) => (
-                <div key={transaction.id} className="bg-white p-3 rounded shadow-sm">
-                  <div className="flex justify-between text-sm">
+                <div key={transaction.id} className="p-3 rounded shadow-sm bg-white dark:bg-gray-700">
+                  <div className="flex justify-between text-sm text-gray-900 dark:text-gray-100">
                     <div>
                       <span className="font-medium">#{transaction.id}</span>
                       <span className="mx-2">
@@ -369,7 +333,7 @@ export default function ConversorMonedas() {
                         {(transaction.amount * transaction.exchangeRate).toFixed(2)} {transaction.destinationCurrency.symbol}
                       </span>
                     </div>
-                    <span className="text-gray-500">
+                    <span className="text-gray-500 dark:text-gray-400">
                       {new Date(transaction.date).toLocaleDateString()}
                     </span>
                   </div>

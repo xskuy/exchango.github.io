@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts"
 import { DollarSign, Users, Activity, Coins } from "lucide-react"
+import { useSession } from 'next-auth/react';
 
 const volumeData = [
   { name: "Ene", BTC: 4000, ETH: 2400, USD: 2400 },
@@ -28,31 +29,64 @@ const priceData = [
 ]
 
 export default function Dashboard() {
-  const [dashboardData, setDashboardData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [userName, setUserName] = useState<string>("User");
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      if (!session || !session.user || !session.user.email) {
+        console.error('User session or email is not available');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await fetch('/api/dashboard')
-        if (response.ok) {
-          const data = await response.json()
-          setDashboardData(data.stats)
+        const dashboardResponse = await fetch('/api/dashboard');
+        const userResponse = await fetch(`/api/user?email=${session.user.email}`);
+
+        if (dashboardResponse.ok && userResponse.ok) {
+          const dashboardData = await dashboardResponse.json();
+          const userData = await userResponse.json();
+
+          setDashboardData(dashboardData.stats);
+          setUserName(userData.name); // Asigna el nombre del usuario
+        } else {
+          console.error('Error fetching data:', dashboardResponse.status, userResponse.status);
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error)
+        console.error('Error fetching data:', error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchDashboardData()
-  }, [])
+    fetchDashboardData();
+  }, [session]);
+
+  const getGreeting = () => {
+    const currentHour = new Date().getHours();
+    if (currentHour < 12) return "Good morning";
+    if (currentHour < 18) return "Good afternoon";
+    return "Good evening";
+  };
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          {getGreeting()},{" "}
+          <span
+            style={{
+              background: "linear-gradient(90deg, #ff7e5f, #feb47b)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {userName}
+          </span>
+        </h2>
       </div>
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
