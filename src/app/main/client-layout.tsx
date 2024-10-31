@@ -41,7 +41,7 @@ import {
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useTheme } from "next-themes";
 
 // Datos de navegación
@@ -76,6 +76,12 @@ export default function DashboardLayout({
 }) {
   const { data: session } = useSession();
   const { theme, setTheme } = useTheme();
+
+  const handleSignOut = async () => {
+    await signOut({ 
+      callbackUrl: '/auth/login-page' // Redirige al login después de cerrar sesión
+    });
+  };
 
   return (
     <SidebarProvider>
@@ -169,7 +175,7 @@ export default function DashboardLayout({
                     )}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Cerrar sesión
                   </DropdownMenuItem>
