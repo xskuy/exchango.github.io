@@ -21,11 +21,11 @@ Esta es una aplicación de conversión de moneda que permite a los usuarios regi
    npm install
    ```
 
-3. Copia el archivo `.env.example` a `.env` y configura las variables de entorno:
+3. Cree un archivo de configuración .env en la raíz del proyecto:
    ```
-   cp .env.example .env
+   touch .env
    ```
-   Asegúrate de configurar correctamente la URL de la base de datos y otras variables necesarias.
+   Y copiar los siguientes valores que estan en el archivo que se adjuta
 
 4. Configura la base de datos con Prisma:
    ```
