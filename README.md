@@ -12,8 +12,8 @@ Esta es una aplicación de conversión de moneda que permite a los usuarios regi
 
 1. Clona este repositorio:
    ```
-   git clone https://github.com/tu-usuario/tu-repositorio.git
-   cd tu-repositorio
+   git clone git@github.com:xskuy/exchango.github.io.git
+   cd exchango.github.io.git
    ```
 
 2. Instala las dependencias:
