@@ -1,20 +1,34 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useSession, signOut } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-
+import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart, DollarSign, Bitcoin, ArrowUpDown, TrendingUp, Activity } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { 
+  ArrowUpRight, Bell, ChevronDown, CreditCard, Download, 
+  Eye, EyeOff, History, HelpCircle, LogOut, QrCode, 
+  Search, Send, Settings, Copy 
+} from "lucide-react"
 
 interface UserData {
   id: number
   name: string
   email: string
   role: string
-  transactions: any[] // Puedes definir una interfaz más específica si lo necesitas
+  walletId: string
+  status: string
+  wallet: {
+    id: number
+    balance: number
+  }
+  transactions: any[]
   stats?: {
     mostBoughtCurrency?: [string, number]
     largestTransaction?: {
@@ -29,8 +43,16 @@ interface UserData {
   }
 }
 
-export default function Component() {
-  const [activeTab, setActiveTab] = useState("populares")
+const formatWalletId = (walletId: string) => {
+  const lastTwelveChars = walletId.slice(-12);
+  const maskedPart = '•'.repeat(walletId.length - 12);
+  return `${maskedPart}${lastTwelveChars}`;
+};
+
+export default function Profile() {
+  const [isLoading, setIsLoading] = useState(true)
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
+  const [showBalance, setShowBalance] = useState(true)
   const [userData, setUserData] = useState<UserData | null>(null)
   const { data: session } = useSession()
 
@@ -38,6 +60,7 @@ export default function Component() {
     const fetchUserData = async () => {
       if (session?.user?.email) {
         try {
+          setIsLoading(true)
           const response = await fetch(`/api/user?email=${session.user.email}`)
           if (response.ok) {
             const data = await response.json()
@@ -45,6 +68,8 @@ export default function Component() {
           }
         } catch (error) {
           console.error('Error fetching user data:', error)
+        } finally {
+          setIsLoading(false)
         }
       }
     }
@@ -52,193 +77,283 @@ export default function Component() {
     fetchUserData()
   }, [session])
 
-  const popularCurrencies = [
-    { name: "Bitcoin", symbol: "BTC", price: "34,567.89", change: "+2.5%" },
-    { name: "Ethereum", symbol: "ETH", price: "2,345.67", change: "-1.2%" },
-    { name: "Dólar", symbol: "USD", price: "1.00", change: "0%" },
-    { name: "Euro", symbol: "EUR", price: "1.18", change: "+0.3%" },
-  ]
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
 
-  const recentTransactions = [
-    { from: "BTC", to: "USD", amount: "0.5 BTC", value: "$17,283.94" },
-    { from: "ETH", to: "EUR", amount: "2 ETH", value: "€4,691.34" },
-    { from: "USD", to: "BTC", amount: "$1,000", value: "0.029 BTC" },
-  ]
+  if (!userData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p>No se pudo cargar la información del usuario.</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
-  const formatTransaction = (transaction: any) => {
-    return {
-      from: transaction.originCurrency.symbol,
-      to: transaction.destinationCurrency.symbol,
-      amount: `${transaction.amount} ${transaction.originCurrency.symbol}`,
-      value: `${(transaction.amount * transaction.exchangeRate).toFixed(2)} ${transaction.destinationCurrency.symbol}`
+  const copyWalletId = () => {
+    if (userData?.walletId) {
+      navigator.clipboard.writeText(userData.walletId);
     }
   }
 
-  const popularStats = [
-    {
-      title: "Moneda más comprada",
-      value: userData?.stats?.mostBoughtCurrency?.[0] || '-',
-      change: `${userData?.stats?.mostBoughtCurrency?.[1]} operaciones`,
-      icon: TrendingUp
-    },
-    {
-      title: "Mayor transacción",
-      value: userData?.stats?.largestTransaction ? 
-        `${userData.stats.largestTransaction.amount} ${userData.stats.largestTransaction.originCurrency.symbol}` : '-',
-      date: userData?.stats?.largestTransaction ? 
-        new Date(userData.stats.largestTransaction.date).toLocaleDateString() : '-',
-      icon: ArrowUpDown
-    },
-    {
-      title: "Total operaciones",
-      value: userData?.stats?.monthlyOperations?.toString() || '0',
-      subtitle: "Este mes",
-      icon: Activity
-    },
-    {
-      title: "Conversión favorita",
-      value: userData?.stats?.favoriteConversion?.[0] || '-',
-      subtitle: `${userData?.stats?.favoriteConversion?.[1] || 0} operaciones`,
-      icon: BarChart
+  const formatTransaction = (transaction: any) => {
+    return {
+      title: transaction.type === 'DEPOSIT' ? 'Recarga' : 
+             transaction.type === 'WITHDRAWAL' ? 'Retiro' : 
+             'Transferencia',
+      amount: transaction.amount,
+      symbol: transaction.originCurrency.symbol,
+      date: new Date(transaction.date).toLocaleDateString(),
+      type: transaction.type,
+      isPositive: transaction.type === 'DEPOSIT'
     }
-  ]
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 bg-background text-foreground">
-      <div className="flex items-center space-x-4 mb-6">
-        <Avatar className="w-24 h-24">
-          <AvatarImage src="/placeholder.svg?height=96&width=96" alt={userData?.name || 'Usuario'} />
-          <AvatarFallback>{userData?.name?.charAt(0) || 'U'}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-2xl font-bold">{userData?.name || 'Cargando...'}</h1>
-          <p className="text-muted-foreground">{userData?.email || 'Cargando...'}</p>
-          <p className="text-sm text-muted-foreground">Rol: {userData?.role || 'USER'}</p>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-background border-b">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Mi Perfil</h1>
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="icon">
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Monedas populares</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {popularCurrencies.map((currency) => (
-                <div key={currency.symbol} className="flex justify-between items-center p-2 bg-muted rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    {currency.symbol === "BTC" ? <Bitcoin className="w-5 h-5" /> : 
-                      currency.symbol === "USD" || currency.symbol === "EUR" ? <DollarSign className="w-5 h-5" /> :
-                      <ArrowUpDown className="w-5 h-5" />}
-                    <span>{currency.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <div>${currency.price}</div>
-                    <div className={currency.change.startsWith('+') ? 'text-green-500' : 'text-red-500'}>
-                      {currency.change}
-                    </div>
-                  </div>
+      <main className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row md:items-start md:space-x-8 mb-8">
+          <div className="flex-shrink-0 mb-6 md:mb-0">
+            <Avatar className="h-24 w-24 md:h-32 md:w-32">
+              <AvatarImage src="/placeholder.svg?height=128&width=128" alt={userData.name} />
+              <AvatarFallback>{userData.name.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </div>
+          <div className="flex-grow">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h2 className="text-3xl font-bold">{userData.name}</h2>
+                <p className="text-muted-foreground">{userData.email}</p>
+                <div className="flex items-center mt-2">
+                  <p className="text-sm mr-2">
+                    Wallet ID: {userData?.walletId ? formatWalletId(userData.walletId) : '•••••••'}
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="h-4 w-4 p-0"
+                    onClick={copyWalletId}
+                    title="Copiar Wallet ID"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </Button>
                 </div>
-              ))}
+              </div>
+              <Badge variant="secondary">{userData.role}</Badge>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Actividad reciente</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="populares">Populares</TabsTrigger>
-                <TabsTrigger value="transacciones">Transacciones</TabsTrigger>
-              </TabsList>
-              <TabsContent value="populares">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  {popularStats.map((stat, index) => (
-                    <div
-                      key={index}
-                      className="p-4 bg-muted rounded-lg flex items-start space-x-4"
-                    >
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        <stat.icon className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">
-                          {stat.title}
-                        </p>
-                        <h4 className="text-xl font-bold">{stat.value || '-'}</h4>
-                        {stat.change && (
-                          <p className="text-sm text-green-500">{stat.change}</p>
-                        )}
-                        {stat.date && (
-                          <p className="text-sm text-muted-foreground">{stat.date}</p>
-                        )}
-                        {stat.subtitle && (
-                          <p className="text-sm text-muted-foreground">{stat.subtitle}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+            
+            <Card className="mb-8">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Saldo actual</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => setShowBalance(!showBalance)}>
+                  {showBalance ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {showBalance ? `$${userData.wallet.balance.toFixed(2) || '0.00'}` : "••••••"}
                 </div>
-              </TabsContent>
-              <TabsContent value="transacciones">
-                <div className="space-y-4 mt-4">
-                  {userData?.transactions && userData.transactions.length > 0 ? (
-                    userData.transactions.map((transaction) => {
-                      const formattedTx = formatTransaction(transaction)
-                      return (
-                        <div key={transaction.id} className="flex justify-between items-center p-2 bg-muted rounded-lg">
-                          <div>
-                            <div className="font-medium">{formattedTx.from} → {formattedTx.to}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {formattedTx.amount}
-                              <span className="ml-2 text-gray-500">
-                                {new Date(transaction.date).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-medium">{formattedTx.value}</div>
-                            <div className="text-xs text-muted-foreground">
-                              ID: {transaction.id.toString()}
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <div className="text-center text-muted-foreground py-4">
-                      No hay transacciones recientes
+                <p className="text-xs text-muted-foreground">
+                  Última actividad: {userData.transactions[0]?.date ? 
+                    new Date(userData.transactions[0].date).toLocaleString() : 
+                    'Sin actividad'}
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <Button className="w-full">
+                <Send className="mr-2 h-5 w-5" /> Enviar
+              </Button>
+              <Button variant="outline" className="w-full">
+                <ArrowUpRight className="mr-2 h-5 w-5" /> Recargar
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Resumen</TabsTrigger>
+            <TabsTrigger value="transactions">Transacciones</TabsTrigger>
+            <TabsTrigger value="settings">Configuración</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Estadísticas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {userData.stats?.mostBoughtCurrency && (
+                    <div>
+                      <p className="text-sm font-medium">Cripto más comprada</p>
+                      <p className="text-2xl">{userData.stats.mostBoughtCurrency[0]}</p>
+                    </div>
+                  )}
+                  {userData.stats?.monthlyOperations && (
+                    <div>
+                      <p className="text-sm font-medium">Operaciones mensuales</p>
+                      <p className="text-2xl">{userData.stats.monthlyOperations}</p>
                     </div>
                   )}
                 </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Gráfico de actividad</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[100px] bg-muted rounded-lg flex items-center justify-center">
-              {Array.from({ length: 52 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-2 h-2 m-0.5 bg-primary"
-                  style={{
-                    opacity: Math.random(),
-                    height: `${Math.max(10, Math.random() * 40)}px`
-                  }}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Mayor transacción</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {userData.stats?.largestTransaction && (
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {userData.stats.largestTransaction.amount} 
+                      {userData.stats.largestTransaction.originCurrency.symbol}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(userData.stats.largestTransaction.date).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="transactions" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Historial de transacciones</CardTitle>
+                <CardDescription>
+                  <div className="flex items-center space-x-2">
+                    <Search className="h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Buscar transacciones" />
+                  </div>
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <Select>
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Filtrar por fecha" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="today">Hoy</SelectItem>
+                        <SelectItem value="week">Esta semana</SelectItem>
+                        <SelectItem value="month">Este mes</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Exportar
+                    </Button>
+                  </div>
+                </div>
+                <ul className="mt-4 space-y-2">
+                  {userData.transactions.map((transaction, index) => {
+                    const formattedTx = formatTransaction(transaction)
+                    return (
+                      <li key={index} className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{formattedTx.title}</p>
+                          <p className="text-sm text-muted-foreground">{formattedTx.date}</p>
+                        </div>
+                        <span className={formattedTx.isPositive ? "text-green-500" : "text-red-500"}>
+                          {formattedTx.isPositive ? '+' : '-'}
+                          {formattedTx.amount} {formattedTx.symbol}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configuración de seguridad</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="2fa">Autenticación de dos factores (2FA)</Label>
+                  <Switch id="2fa" />
+                </div>
+                <Button variant="outline" className="w-full">Cambiar contraseña</Button>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Opciones de cuenta</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notifications">Notificaciones</Label>
+                  <Switch
+                    id="notifications"
+                    checked={notificationsEnabled}
+                    onCheckedChange={setNotificationsEnabled}
+                  />
+                </div>
+                <Button variant="outline" className="w-full">
+                  <Download className="mr-2 h-4 w-4" />
+                  Exportar/Respaldar wallet
+                </Button>
+                <Button variant="outline" className="w-full">
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Administrar tarjetas
+                </Button>
+                <Button variant="outline" className="w-full">
+                  <QrCode className="mr-2 h-4 w-5" />
+                  Mi código QR
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      <footer className="fixed bottom-0 left-0 right-0 bg-background border-t">
+        <div className="container mx-auto px-4 py-4 flex justify-center">
+          <Button variant="ghost" className="text-destructive" onClick={() => signOut()}>
+            <LogOut className="mr-2 h-5 w-5" /> Cerrar sesión
+          </Button>
+        </div>
+      </footer>
     </div>
   )
 }

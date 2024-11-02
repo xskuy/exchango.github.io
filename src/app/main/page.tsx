@@ -1,13 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts"
-import { DollarSign, Users, Activity, Coins, ArrowUpRight, ArrowDownLeft, Bitcoin } from "lucide-react"
-import { useSession } from 'next-auth/react';
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
+import { DollarSign, Users, Activity, Coins, ArrowUpRight, ArrowDownLeft, Bitcoin } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import "../style/page.css";
 
 const volumeData = [
   { name: "Ene", BTC: 4000, ETH: 2400, USD: 2400 },
@@ -17,7 +18,7 @@ const volumeData = [
   { name: "May", BTC: 1890, ETH: 4800, USD: 2181 },
   { name: "Jun", BTC: 2390, ETH: 3800, USD: 2500 },
   { name: "Jul", BTC: 3490, ETH: 4300, USD: 2100 },
-]
+];
 
 const priceData = [
   { name: "Ene", BTC: 33000, ETH: 2200 },
@@ -27,30 +28,30 @@ const priceData = [
   { name: "May", BTC: 38000, ETH: 2500 },
   { name: "Jun", BTC: 40000, ETH: 2600 },
   { name: "Jul", BTC: 42000, ETH: 2700 },
-]
+];
 
 export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [userName, setUserName] = useState<string>("User");
   const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
-  const [balance, setBalance] = useState(1234.56)
+  const [balance, setBalance] = useState(1234.56);
   const [transactions, setTransactions] = useState([
-    { id: 1, type: 'received', amount: 100, currency: 'USD', from: 'Alice' },
-    { id: 2, type: 'sent', amount: 50, currency: 'USD', to: 'Bob' },
-    { id: 3, type: 'received', amount: 0.005, currency: 'BTC', from: 'Charlie' },
-  ])
+    { id: 1, type: "received", amount: 100, currency: "USD", from: "Alice" },
+    { id: 2, type: "sent", amount: 50, currency: "USD", to: "Bob" },
+    { id: 3, type: "received", amount: 0.005, currency: "BTC", from: "Charlie" },
+  ]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (!session || !session.user || !session.user.email) {
-        console.error('User session or email is not available');
+        console.error("User session or email is not available");
         setLoading(false);
         return;
       }
 
       try {
-        const dashboardResponse = await fetch('/api/dashboard');
+        const dashboardResponse = await fetch("/api/dashboard");
         const userResponse = await fetch(`/api/user?email=${session.user.email}`);
 
         if (dashboardResponse.ok && userResponse.ok) {
@@ -60,10 +61,10 @@ export default function Dashboard() {
           setDashboardData(dashboardData.stats);
           setUserName(userData.name); // Asigna el nombre del usuario
         } else {
-          console.error('Error fetching data:', dashboardResponse.status, userResponse.status);
+          console.error("Error fetching data:", dashboardResponse.status, userResponse.status);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -79,7 +80,18 @@ export default function Dashboard() {
     return "Good evening";
   };
 
-  return (
+
+  useEffect(() => {
+    if (userName !== "User" && dashboardData && dashboardData?.totalUsers) {
+      setLoading(false);
+    }
+  }, [userName, dashboardData, loading])
+  
+  return userName === "User" ? (
+    <div className="flex-1 flex justify-center items-center w-full h-full" suppressHydrationWarning>
+      <div className="loader" />
+    </div>
+  ) : (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">
@@ -109,9 +121,7 @@ export default function Dashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.totalUsers || 0}
-                </div>
+                <div className="text-2xl font-bold">{loading ? "Cargando..." : dashboardData?.totalUsers || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -124,7 +134,7 @@ export default function Dashboard() {
                   {loading ? "Cargando..." : dashboardData?.totalTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.transactionChange > 0 ? '+' : ''}
+                  {dashboardData?.transactionChange > 0 ? "+" : ""}
                   {dashboardData?.transactionChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
@@ -139,7 +149,7 @@ export default function Dashboard() {
                   {loading ? "Cargando..." : dashboardData?.activeTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.transactionChange > 0 ? '+' : ''}
+                  {dashboardData?.transactionChange > 0 ? "+" : ""}
                   {dashboardData?.transactionChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
@@ -154,7 +164,7 @@ export default function Dashboard() {
                   {loading ? "Cargando..." : dashboardData?.totalCryptocurrencies || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.totalCryptocurrenciesChange > 0 ? '+' : ''}
+                  {dashboardData?.totalCryptocurrenciesChange > 0 ? "+" : ""}
                   {dashboardData?.totalCryptocurrenciesChange?.toFixed(1)}% respecto a la semana pasada
                 </p>
               </CardContent>
@@ -217,25 +227,25 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {transactions.map(transaction => (
+                {transactions.map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between">
                     <div className="flex items-center">
-                      {transaction.type === 'received' ? (
+                      {transaction.type === "received" ? (
                         <ArrowDownLeft className="mr-2 h-4 w-4 text-green-500" />
                       ) : (
                         <ArrowUpRight className="mr-2 h-4 w-4 text-red-500" />
                       )}
                       <div>
                         <div className="font-medium">
-                          {transaction.type === 'received' ? 'Recibido de' : 'Enviado a'} {transaction.from || transaction.to}
+                          {transaction.type === "received" ? "Recibido de" : "Enviado a"}{" "}
+                          {transaction.from || transaction.to}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date().toLocaleDateString()}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
                       </div>
                     </div>
                     <div className="font-medium">
-                      {transaction.type === 'received' ? '+' : '-'}{transaction.amount} {transaction.currency}
+                      {transaction.type === "received" ? "+" : "-"}
+                      {transaction.amount} {transaction.currency}
                     </div>
                   </div>
                 ))}
@@ -289,9 +299,7 @@ export default function Dashboard() {
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Precios de Criptomonedas</CardTitle>
-                <CardDescription>
-                  Evolución de precios de BTC y ETH en los últimos 7 meses
-                </CardDescription>
+                <CardDescription>Evolución de precios de BTC y ETH en los últimos 7 meses</CardDescription>
               </CardHeader>
               <CardContent>
                 <ChartContainer
@@ -327,26 +335,20 @@ export default function Dashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Nuevos Usuarios (Últimas 24h)
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Nuevos Usuarios (Últimas 24h)</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.newUsers || 0}
-                </div>
+                <div className="text-2xl font-bold">{loading ? "Cargando..." : dashboardData?.newUsers || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.newUsersChange > 0 ? '+' : ''}
+                  {dashboardData?.newUsersChange > 0 ? "+" : ""}
                   {dashboardData?.newUsersChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Volumen de Transacciones (24h)
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Volumen de Transacciones (24h)</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -354,16 +356,14 @@ export default function Dashboard() {
                   {loading ? "Cargando..." : dashboardData?.transactionsVolume || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.transactionsVolumeChange > 0 ? '+' : ''}
+                  {dashboardData?.transactionsVolumeChange > 0 ? "+" : ""}
                   {dashboardData?.transactionsVolumeChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Transacciones Completadas (24h)
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Transacciones Completadas (24h)</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -371,24 +371,22 @@ export default function Dashboard() {
                   {loading ? "Cargando..." : dashboardData?.completedTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.completedTransactionsChange > 0 ? '+' : ''}
+                  {dashboardData?.completedTransactionsChange > 0 ? "+" : ""}
                   {dashboardData?.completedTransactionsChange?.toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Criptomoneda Más Negociada
-                </CardTitle>
+                <CardTitle className="text-sm font-medium">Criptomoneda Más Negociada</CardTitle>
                 <Coins className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.mostTradedCurrency || ''}
+                  {loading ? "Cargando..." : dashboardData?.mostTradedCurrency || ""}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.mostTradedCurrencyChange > 0 ? '+' : ''}
+                  {dashboardData?.mostTradedCurrencyChange > 0 ? "+" : ""}
                   {dashboardData?.mostTradedCurrencyChange?.toFixed(1)}% respecto a la semana pasada
                 </p>
               </CardContent>
@@ -493,25 +491,25 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {transactions.map(transaction => (
+                {transactions.map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between">
                     <div className="flex items-center">
-                      {transaction.type === 'received' ? (
+                      {transaction.type === "received" ? (
                         <ArrowDownLeft className="mr-2 h-4 w-4 text-green-500" />
                       ) : (
                         <ArrowUpRight className="mr-2 h-4 w-4 text-red-500" />
                       )}
                       <div>
                         <div className="font-medium">
-                          {transaction.type === 'received' ? 'Recibido de' : 'Enviado a'} {transaction.from || transaction.to}
+                          {transaction.type === "received" ? "Recibido de" : "Enviado a"}{" "}
+                          {transaction.from || transaction.to}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {new Date().toLocaleDateString()}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
                       </div>
                     </div>
                     <div className="font-medium">
-                      {transaction.type === 'received' ? '+' : '-'}{transaction.amount} {transaction.currency}
+                      {transaction.type === "received" ? "+" : "-"}
+                      {transaction.amount} {transaction.currency}
                     </div>
                   </div>
                 ))}
@@ -526,5 +524,5 @@ export default function Dashboard() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
