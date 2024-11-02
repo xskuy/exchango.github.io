@@ -45,7 +45,7 @@ async function main() {
     if (error instanceof Error) {
       console.error('Error al crear el usuario:', error.message)
     } else {
-      console.error('Error desconocido:', error)
+      console.error('Error desconocido:', error) 
     }
   } finally {
     await prisma.$disconnect()

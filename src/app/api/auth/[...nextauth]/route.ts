@@ -3,8 +3,10 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 import bcrypt from "bcrypt"
+import { NextAuthOptions } from "next-auth"
 
-const handler = NextAuth({
+// Exportar authOptions separadamente
+export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -28,7 +30,7 @@ const handler = NextAuth({
           });
 
           console.log("User found:", user ? "Yes" : "No");
-          console.log("User details:", user); // Agrega este log
+          console.log("User details:", user);
 
           if (!user || !user.password) {
             console.log("User not found or password not set");
@@ -62,6 +64,9 @@ const handler = NextAuth({
     signIn: "/auth/login-page",
     error: "/auth/error",
   },
-})
+}
+
+// Crear el handler usando authOptions
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }

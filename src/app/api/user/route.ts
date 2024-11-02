@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     const user = await prisma.user.findUnique({
       where: { email },
       include: {
+        wallet: true,
         transactions: {
           include: {
             originCurrency: true,
@@ -49,6 +50,12 @@ export async function GET(request: Request) {
       name: user.name,
       email: user.email,
       role: user.role,
+      walletId: user.walletId,
+      status: user.status,
+      wallet: {
+        id: user.wallet?.id,
+        balance: user.wallet?.balance || 0,
+      },
       transactions: user.transactions.slice(0, 5), // Solo las últimas 5 transacciones
       stats: stats
     })
