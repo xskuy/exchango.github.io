@@ -1,7 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Eye, EyeOff, Loader, Check, Smartphone, AlertTriangle, Clock, ArrowRight, Shield } from "lucide-react";
+import {
+  Lock,
+  Eye,
+  EyeOff,
+  Loader,
+  Check,
+  Smartphone,
+  AlertTriangle,
+  Clock,
+  ArrowRight,
+  Shield,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -117,11 +129,13 @@ export function SecurityVerification({
           </h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <span className="text-blue-700">Monto:</span>
-            <span className="text-blue-900 font-medium">$1,007.50 USD</span>
+            <span className="text-blue-900 font-medium">${amount.toFixed(2)} USD</span>
             <span className="text-blue-700">Recibirás:</span>
-            <span className="text-blue-900 font-medium">920.00 EUR</span>
+            <span className="text-blue-900 font-medium">
+              {receivedAmount.toFixed(2)} {currency}
+            </span>
             <span className="text-blue-700">Método:</span>
-            <span className="text-blue-900">Saldo disponible</span>
+            <span className="text-blue-900">{paymentMethod}</span>
             <span className="text-blue-700">Tiempo estimado:</span>
             <span className="text-blue-900">1-2 minutos</span>
           </div>
@@ -248,7 +262,15 @@ export function SecurityVerification({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg w-full max-w-md p-6">
+      <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
+        <button
+          onClick={onClose}
+          className="absolute right-0 top-0 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          aria-label="Cerrar"
+        >
+          <X className="w-5 h-5 text-gray-500" />
+        </button>
+
         {step === "password" && renderPasswordStep()}
         {step === "2fa" && render2FAStep()}
         {step === "success" && renderSuccessStep()}

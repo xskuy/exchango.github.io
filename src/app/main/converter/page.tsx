@@ -8,6 +8,7 @@ import ThemeToggle from "@/components/theme-toggle";
 import CurrencyBuyer from "@/components/currency-buyer";
 import DrawerConfirmation from "@/components/drawer-confirmation";
 import { SecurityVerification } from "@/components/security-verification";
+import { RecentTransactionsCard } from "@/components/recent-transactions-card";
 import { useCurrency } from "@/context/currency-context";
 
 export default function ConversorMonedas() {
@@ -80,33 +81,41 @@ export default function ConversorMonedas() {
       </header>
 
       <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto p-6">
-          <CurrencyBuyer onShowDrawer={handleShowDrawer} />
-
-          <div className="grid grid-cols-2 gap-6"></div>
-
-          {showDrawer && drawerData && (
-            <DrawerConfirmation
-              onClose={() => setShowDrawer(false)}
-              onConfirm={handleFinalConfirmation}
-              amount={drawerData.amount}
-              currency={drawerData.currency}
-              exchangeRate={drawerData.exchangeRate || 1}
-              paymentMethod="Saldo disponible"
-            />
-          )}
-
-          {showSecurity && securityData && (
-            <SecurityVerification
-              onClose={() => setShowSecurity(false)}
-              onSuccess={handleSecuritySuccess}
-              amount={securityData.amount}
-              receivedAmount={securityData.receivedAmount}
-              currency={securityData.currency}
-              paymentMethod={securityData.paymentMethod}
-            />
-          )}
+        {/* Formulario de conversión a todo el ancho */}
+        <div className="w-full bg-background border-b">
+          <div className="container mx-auto p-6">
+            <CurrencyBuyer onShowDrawer={handleShowDrawer} />
+          </div>
         </div>
+
+        {/* Historial como card */}
+        <div className="container mx-auto p-6">
+          <div className="max-w-3xl mx-auto">
+            <RecentTransactionsCard />
+          </div>
+        </div>
+
+        {showDrawer && drawerData && (
+          <DrawerConfirmation
+            onClose={() => setShowDrawer(false)}
+            onConfirm={handleFinalConfirmation}
+            amount={drawerData.amount}
+            currency={drawerData.currency}
+            exchangeRate={drawerData.exchangeRate || 1}
+            paymentMethod="Saldo disponible"
+          />
+        )}
+
+        {showSecurity && securityData && (
+          <SecurityVerification
+            onClose={() => setShowSecurity(false)}
+            onSuccess={handleSecuritySuccess}
+            amount={securityData.amount}
+            receivedAmount={securityData.receivedAmount}
+            currency={securityData.currency}
+            paymentMethod={securityData.paymentMethod}
+          />
+        )}
       </main>
     </div>
   );

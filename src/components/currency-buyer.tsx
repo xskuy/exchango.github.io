@@ -17,7 +17,16 @@ export default function CurrencyBuyer({
 }: {
   onShowDrawer: (data: { amount: string; currency: string; exchangeRate: number }) => void;
 }) {
-  const { lastUpdate, getExchangeRate } = useCurrency();
+  const {
+    lastUpdate,
+    getExchangeRate,
+    balance,
+    availablePaymentMethods,
+    selectedPaymentMethod,
+    setSelectedPaymentMethod,
+    loadTransactions,
+  } = useCurrency();
+
   const [spendAmount, setSpendAmount] = useState("");
   const [targetCurrency, setTargetCurrency] = useState("EUR");
   const [isLoading, setIsLoading] = useState(false);
@@ -83,6 +92,7 @@ export default function CurrencyBuyer({
         throw new Error(error.error || "Error al procesar la compra");
       }
 
+      await loadTransactions();
       toast.success("Compra realizada con éxito");
       setSpendAmount("");
     } catch (error) {
@@ -91,6 +101,13 @@ export default function CurrencyBuyer({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const formatBalance = (amount: number) => {
+    return new Intl.NumberFormat("es-ES", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
   };
 
   return (
@@ -114,6 +131,23 @@ export default function CurrencyBuyer({
                     className="pl-7 text-lg"
                   />
                 </div>
+                <p className="text-sm text-muted-foreground">Saldo disponible: {formatBalance(balance.amount)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Método de pago</Label>
+                <Select value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar método de pago" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePaymentMethods.map((method) => (
+                      <SelectItem key={method.id} value={method.value}>
+                        {method.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -170,7 +204,7 @@ export default function CurrencyBuyer({
                 Procesando...
               </>
             ) : (
-              "Confirmar compra"
+              "Continuar"
             )}
           </Button>
         </div>

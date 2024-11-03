@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
 interface Transaction {
@@ -18,6 +18,17 @@ interface ExchangeRate {
   lastUpdated: Date;
 }
 
+interface PaymentMethod {
+  id: string;
+  name: string;
+  value: string;
+}
+
+interface UserBalance {
+  amount: number;
+  currency: string;
+}
+
 interface CurrencyContextType {
   transactions: Transaction[];
   exchangeRates: ExchangeRate[];
@@ -27,6 +38,11 @@ interface CurrencyContextType {
   processTransaction: (data: TransactionData) => Promise<void>;
   getExchangeRate: (currency: string) => Promise<number>;
   updateExchangeRates: () => Promise<void>;
+  balance: UserBalance;
+  availablePaymentMethods: PaymentMethod[];
+  selectedPaymentMethod: string;
+  setSelectedPaymentMethod: (method: string) => void;
+  conversions: Conversion[];
 }
 
 interface TransactionData {
@@ -43,6 +59,17 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleTimeString());
   const [isLoading, setIsLoading] = useState(false);
+  const [balance, setBalance] = useState<UserBalance>({
+    amount: 1234.56,
+    currency: "USD",
+  });
+  const [availablePaymentMethods] = useState<PaymentMethod[]>([
+    { id: "1", name: "Saldo disponible", value: "balance" },
+    { id: "2", name: "Tarjeta guardada", value: "card" },
+    { id: "3", name: "Transferencia bancaria", value: "bank" },
+  ]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("balance");
+  const [conversions, setConversions] = useState<Conversion[]>([]);
 
   // Función para verificar si necesitamos actualizar las tasas
   const shouldUpdateRates = (lastUpdated: Date) => {
@@ -119,21 +146,20 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loadTransactions = async () => {
-    if (transactions.length > 0) {
-      // Si ya tenemos transacciones, no las volvemos a cargar
-      return;
-    }
-
     try {
       const response = await fetch("/api/conversion");
-      if (!response.ok) throw new Error("Error al cargar el historial");
+      if (!response.ok) throw new Error("Error al cargar conversiones");
       const data = await response.json();
-      setTransactions(data);
-      setLastUpdate(new Date().toLocaleTimeString());
+      setConversions(data);
     } catch (error) {
-      toast.error("Error al cargar el historial");
+      console.error("Error loading transactions:", error);
     }
   };
+
+  // Cargar transacciones inicialmente
+  useEffect(() => {
+    loadTransactions();
+  }, []);
 
   const processTransaction = async (transactionData: TransactionData) => {
     setIsLoading(true);
@@ -175,6 +201,11 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
         processTransaction,
         getExchangeRate,
         updateExchangeRates,
+        balance,
+        availablePaymentMethods,
+        selectedPaymentMethod,
+        setSelectedPaymentMethod,
+        conversions,
       }}
     >
       {children}

@@ -11,7 +11,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { amount, fromCurrency, toCurrency, result } = await request.json()
+    const body = await request.json()
+    console.log('Body recibido:', body)
+
+    const { amount, fromCurrency, toCurrency, exchangeRate } = body
+
+    // Validaciones iniciales
+    if (!amount || !fromCurrency || !toCurrency || !exchangeRate) {
+      return NextResponse.json(
+        { error: 'Faltan datos requeridos' },
+        { status: 400 }
+      )
+    }
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email }
@@ -20,6 +31,11 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
     }
+
+    // Calcular el resultado
+    const parsedAmount = parseFloat(amount)
+    const parsedExchangeRate = parseFloat(exchangeRate)
+    const calculatedResult = parsedAmount * parsedExchangeRate
 
     // Buscar o crear las monedas
     const [originCurrency, destinationCurrency] = await Promise.all([
@@ -46,23 +62,35 @@ export async function POST(request: Request) {
     // Crear la conversión
     const conversion = await prisma.conversion.create({
       data: {
-        amount: parseFloat(amount),
-        result: parseFloat(result),
+        amount: parsedAmount,
+        result: calculatedResult, // Usar el resultado calculado
+        exchangeRate: parsedExchangeRate,
+        status: "COMPLETED",
+        fee: 0,
         userId: user.id,
         originCurrencyId: originCurrency.id,
         destinationCurrencyId: destinationCurrency.id
-      },
+      }
+    })
+
+    // Obtener la conversión con las relaciones
+    const conversionWithRelations = await prisma.conversion.findUnique({
+      where: { id: conversion.id },
       include: {
         originCurrency: true,
         destinationCurrency: true
       }
     })
 
-    return NextResponse.json(conversion)
+    return NextResponse.json(conversionWithRelations)
+
   } catch (error) {
-    console.error('Error saving conversion:', error)
+    console.error('Error detallado:', error)
     return NextResponse.json(
-      { error: 'Error al guardar la conversión' },
+      { 
+        error: 'Error al procesar la conversión',
+        details: error instanceof Error ? error.message : 'Error desconocido'
+      },
       { status: 500 }
     )
   }
