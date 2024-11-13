@@ -1,24 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import {
-  Home,
-  Users,
-  DollarSign,
-  Settings2,
-  LogOut,
-  ChevronsUpDown,
-  ChevronRight,
-  Moon,
-  Sun,
-} from "lucide-react"
-import Link from "next/link"
+import * as React from "react";
+import { Home, Users, DollarSign, Settings2, LogOut, ChevronsUpDown, ChevronRight, Moon, Sun } from "lucide-react";
+import Link from "next/link";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -40,9 +26,12 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { useSession, signOut } from 'next-auth/react';
+} from "@/components/ui/sidebar";
+import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
+import { useUser } from "@/context/user-context";
+import { useEffect } from "react";
+import { redirect } from "next/navigation";
 
 // Datos de navegación
 const navItems = [
@@ -67,19 +56,32 @@ const navItems = [
     url: "/main/settings",
     icon: Settings2,
   },
-]
+];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const { data: session } = useSession();
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const { user, loading, fetchUser } = useUser();
   const { theme, setTheme } = useTheme();
 
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.email && !user?.email) {
+      fetchUser(session.user.email);
+    }
+  }, [status, session?.user?.email, user?.email, fetchUser]);
+
+  if (status === "loading" || (status === "authenticated" && loading && !user)) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="loader" />
+      </div>
+    );
+  }
+
   const handleSignOut = async () => {
-    await signOut({ 
-      callbackUrl: '/auth/login-page' // Redirige al login después de cerrar sesión
+    localStorage.removeItem("userData");
+    localStorage.removeItem("userDataTimestamp");
+    await signOut({
+      callbackUrl: "/auth/login-page",
     });
   };
 
@@ -94,9 +96,7 @@ export default function DashboardLayout({
                   <Home className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">
-                    Crypto Dashboard
-                  </span>
+                  <span className="truncate font-semibold">Crypto Dashboard</span>
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -126,18 +126,17 @@ export default function DashboardLayout({
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
+                      <AvatarImage
+                        src={user?.image || session?.user?.image || ""}
+                        alt={user?.name || session?.user?.name || ""}
+                      />
                       <AvatarFallback className="rounded-lg">
-                        {session?.user?.name?.[0] || 'U'}
+                        {user?.name?.[0] || session?.user?.name?.[0] || "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {session?.user?.name || 'Usuario'}
-                      </span>
-                      <span className="truncate text-xs">
-                        {session?.user?.email || ''}
-                      </span>
+                      <span className="truncate font-semibold">{user?.name || session?.user?.name || "Usuario"}</span>
+                      <span className="truncate text-xs">{user?.email || session?.user?.email || ""}</span>
                     </div>
                     <ChevronsUpDown className="ml-auto size-4" />
                   </SidebarMenuButton>
@@ -148,13 +147,17 @@ export default function DashboardLayout({
                   align="end"
                   sideOffset={4}
                 >
+                  {user?.role === "admin" && (
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem asChild>
+                        <Link href="/main/users">
+                          <Users className="mr-2 h-4 w-4" />
+                          Usuarios
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  )}
                   <DropdownMenuGroup>
-                    <DropdownMenuItem asChild>
-                      <Link href="/main/users">
-                        <Users className="mr-2 h-4 w-4" />
-                        Usuarios
-                      </Link>
-                    </DropdownMenuItem>
                     <DropdownMenuItem>
                       <Settings2 className="mr-2 h-4 w-4" />
                       Configuración
@@ -186,9 +189,7 @@ export default function DashboardLayout({
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
-      <div className="flex-1">
-        {children}
-      </div>
+      <div className="flex-1">{children}</div>
     </SidebarProvider>
-  )
+  );
 }

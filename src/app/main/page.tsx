@@ -9,6 +9,8 @@ import { DollarSign, Users, Activity, Coins, ArrowUpRight, ArrowDownLeft, Bitcoi
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import "../style/page.css";
+import { useUser } from "@/context/user-context";
+import { useDashboard } from "@/context/dashboard-context";
 
 const volumeData = [
   { name: "Ene", BTC: 4000, ETH: 2400, USD: 2400 },
@@ -31,47 +33,17 @@ const priceData = [
 ];
 
 export default function Dashboard() {
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [userName, setUserName] = useState<string>("User");
-  const [loading, setLoading] = useState(true);
   const { data: session } = useSession();
-  const [balance, setBalance] = useState(1234.56);
-  const [transactions, setTransactions] = useState([
-    { id: 1, type: "received", amount: 100, currency: "USD", from: "Alice" },
-    { id: 2, type: "sent", amount: 50, currency: "USD", to: "Bob" },
-    { id: 3, type: "received", amount: 0.005, currency: "BTC", from: "Charlie" },
-  ]);
+  const { user, loading: userLoading, fetchUser } = useUser();
+  const { dashboardData, loading: dashboardLoading, fetchDashboardData } = useDashboard();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!session || !session.user || !session.user.email) {
-        console.error("User session or email is not available");
-        setLoading(false);
-        return;
-      }
+    if (!session?.user?.email) return;
 
-      try {
-        const dashboardResponse = await fetch("/api/dashboard");
-        const userResponse = await fetch(`/api/user?email=${session.user.email}`);
-
-        if (dashboardResponse.ok && userResponse.ok) {
-          const dashboardData = await dashboardResponse.json();
-          const userData = await userResponse.json();
-
-          setDashboardData(dashboardData.stats);
-          setUserName(userData.name); // Asigna el nombre del usuario
-        } else {
-          console.error("Error fetching data:", dashboardResponse.status, userResponse.status);
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [session]);
+    if (!user) {
+      fetchUser(session.user.email);
+    }
+  }, [session?.user?.email, user, fetchUser]);
 
   const getGreeting = () => {
     const currentHour = new Date().getHours();
@@ -80,14 +52,10 @@ export default function Dashboard() {
     return "Good evening";
   };
 
+  const balance = user?.wallet?.balance || 0;
+  const transactions = user?.transactions || [];
 
-  useEffect(() => {
-    if (userName !== "User" && dashboardData && dashboardData?.totalUsers) {
-      setLoading(false);
-    }
-  }, [userName, dashboardData, loading])
-  
-  return userName === "User" ? (
+  return !user || userLoading ? (
     <div className="flex-1 flex justify-center items-center w-full h-full" suppressHydrationWarning>
       <div className="loader" />
     </div>
@@ -103,7 +71,7 @@ export default function Dashboard() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            {userName}
+            {user.name}
           </span>
         </h2>
       </div>
@@ -121,7 +89,9 @@ export default function Dashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{loading ? "Cargando..." : dashboardData?.totalUsers || 0}</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "Cargando..." : dashboardData?.totalUsers || 0}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -131,7 +101,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.totalTransactions || 0}
+                  {dashboardLoading ? "Cargando..." : dashboardData?.totalTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.transactionChange > 0 ? "+" : ""}
@@ -146,7 +116,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.activeTransactions || 0}
+                  {dashboardLoading ? "Cargando..." : dashboardData?.activeTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.transactionChange > 0 ? "+" : ""}
@@ -161,7 +131,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.totalCryptocurrencies || 0}
+                  {dashboardLoading ? "Cargando..." : dashboardData?.totalCryptocurrencies || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.totalCryptocurrenciesChange > 0 ? "+" : ""}
@@ -230,22 +200,36 @@ export default function Dashboard() {
                 {transactions.map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between">
                     <div className="flex items-center">
-                      {transaction.type === "received" ? (
+                      {transaction.type === "DEPOSIT" || transaction.type === "TRANSFER" ? (
                         <ArrowDownLeft className="mr-2 h-4 w-4 text-green-500" />
                       ) : (
                         <ArrowUpRight className="mr-2 h-4 w-4 text-red-500" />
                       )}
                       <div>
                         <div className="font-medium">
-                          {transaction.type === "received" ? "Recibido de" : "Enviado a"}{" "}
-                          {transaction.from || transaction.to}
+                          {transaction.type === "DEPOSIT"
+                            ? "Depósito"
+                            : transaction.type === "WITHDRAWAL"
+                            ? "Retiro"
+                            : transaction.type === "EXCHANGE"
+                            ? "Intercambio"
+                            : "Transferencia"}{" "}
+                          {transaction.description && `- ${transaction.description}`}
                         </div>
-                        <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(transaction.date).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
                     <div className="font-medium">
-                      {transaction.type === "received" ? "+" : "-"}
-                      {transaction.amount} {transaction.currency}
+                      {transaction.type === "DEPOSIT" ? "+" : "-"}
+                      {transaction.amount} {transaction.originCurrency.symbol}
+                      {transaction.type === "EXCHANGE" && (
+                        <span className="text-sm text-muted-foreground">
+                          {" → "}
+                          {transaction.exchangeRate * transaction.amount} {transaction.destinationCurrency.symbol}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -339,7 +323,9 @@ export default function Dashboard() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{loading ? "Cargando..." : dashboardData?.newUsers || 0}</div>
+                <div className="text-2xl font-bold">
+                  {dashboardLoading ? "Cargando..." : dashboardData?.newUsers || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.newUsersChange > 0 ? "+" : ""}
                   {dashboardData?.newUsersChange?.toFixed(1)}% respecto a ayer
@@ -353,7 +339,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.transactionsVolume || 0}
+                  {dashboardLoading ? "Cargando..." : dashboardData?.transactionsVolume || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.transactionsVolumeChange > 0 ? "+" : ""}
@@ -368,7 +354,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.completedTransactions || 0}
+                  {dashboardLoading ? "Cargando..." : dashboardData?.completedTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.completedTransactionsChange > 0 ? "+" : ""}
@@ -383,7 +369,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "Cargando..." : dashboardData?.mostTradedCurrency || ""}
+                  {dashboardLoading ? "Cargando..." : dashboardData?.mostTradedCurrency || ""}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboardData?.mostTradedCurrencyChange > 0 ? "+" : ""}
@@ -494,22 +480,36 @@ export default function Dashboard() {
                 {transactions.map((transaction) => (
                   <div key={transaction.id} className="flex items-center justify-between">
                     <div className="flex items-center">
-                      {transaction.type === "received" ? (
+                      {transaction.type === "DEPOSIT" || transaction.type === "TRANSFER" ? (
                         <ArrowDownLeft className="mr-2 h-4 w-4 text-green-500" />
                       ) : (
                         <ArrowUpRight className="mr-2 h-4 w-4 text-red-500" />
                       )}
                       <div>
                         <div className="font-medium">
-                          {transaction.type === "received" ? "Recibido de" : "Enviado a"}{" "}
-                          {transaction.from || transaction.to}
+                          {transaction.type === "DEPOSIT"
+                            ? "Depósito"
+                            : transaction.type === "WITHDRAWAL"
+                            ? "Retiro"
+                            : transaction.type === "EXCHANGE"
+                            ? "Intercambio"
+                            : "Transferencia"}{" "}
+                          {transaction.description && `- ${transaction.description}`}
                         </div>
-                        <div className="text-sm text-muted-foreground">{new Date().toLocaleDateString()}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(transaction.date).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
                     <div className="font-medium">
-                      {transaction.type === "received" ? "+" : "-"}
-                      {transaction.amount} {transaction.currency}
+                      {transaction.type === "DEPOSIT" ? "+" : "-"}
+                      {transaction.amount} {transaction.originCurrency.symbol}
+                      {transaction.type === "EXCHANGE" && (
+                        <span className="text-sm text-muted-foreground">
+                          {" → "}
+                          {transaction.exchangeRate * transaction.amount} {transaction.destinationCurrency.symbol}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

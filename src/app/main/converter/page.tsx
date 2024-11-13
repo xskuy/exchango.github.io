@@ -4,12 +4,17 @@ import { useState } from "react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Bell, Settings } from "lucide-react";
-import ThemeToggle from "@/components/theme-toggle";
+import dynamic from "next/dynamic";
 import CurrencyBuyer from "@/components/currency-buyer";
 import DrawerConfirmation from "@/components/drawer-confirmation";
 import { SecurityVerification } from "@/components/security-verification";
 import { RecentTransactionsCard } from "@/components/recent-transactions-card";
 import { useCurrency } from "@/context/currency-context";
+
+// Importar ThemeToggle de forma dinámica
+const ThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
+  ssr: false,
+});
 
 export default function ConversorMonedas() {
   const { lastUpdate, loadTransactions, processTransaction } = useCurrency();
