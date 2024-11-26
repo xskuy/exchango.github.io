@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "buildCommand": "pnpm run build",
+  "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": "nextjs",
   "regions": [
     "cdg1"
   ],
   "env": {
     "NEXTAUTH_URL": "https://tu-dominio.vercel.app",
-    "NEXTAUTH_SECRET": "yIVl8oskNtKiAPMn8RDK73PTrQw16uOtTWf+txyPqTk=",
-    "DATABASE_URL": "postgres://postgres.dpdgmycmazihqpsertya:xSkuy_Kungler_6113@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "DATABASE_URL": "@database_url"
   }
 }
