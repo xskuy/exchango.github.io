@@ -8,7 +8,7 @@
   ],
   "env": {
     "NEXTAUTH_URL": "https://tu-dominio.vercel.app",
-    "NEXTAUTH_SECRET": "@nextauth_secret",
-    "DATABASE_URL": "@database_url"
+    "NEXTAUTH_SECRET": "yIVl8oskNtKiAPMn8RDK73PTrQw16uOtTWf+txyPqTk=",
+    "DATABASE_URL": "postgres://postgres.dpdgmycmazihqpsertya:xSkuy_Kungler_6113@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
   }
 }
