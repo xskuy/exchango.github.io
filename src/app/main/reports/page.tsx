@@ -1,16 +1,27 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Line, Bar, Pie } from "react-chartjs-2"
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement } from "chart.js"
-import { Button } from "@/components/ui/button"
-import { Select } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { Line, Bar, Pie } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  ArcElement,
+} from "chart.js";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, BarElement, ArcElement);
 
 export default function ReportsAndAnalytics() {
-  const [selectedChart, setSelectedChart] = useState("line")
+  const [selectedChart, setSelectedChart] = useState("line");
 
   const lineData = {
     labels: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio"],
@@ -22,7 +33,7 @@ export default function ReportsAndAnalytics() {
         tension: 0.1,
       },
     ],
-  }
+  };
 
   const barData = {
     labels: ["USD", "EUR", "GBP", "JPY", "BTC", "ETH"],
@@ -49,7 +60,7 @@ export default function ReportsAndAnalytics() {
         borderWidth: 1,
       },
     ],
-  }
+  };
 
   const pieData = {
     labels: ["Compras", "Ventas"],
@@ -61,14 +72,14 @@ export default function ReportsAndAnalytics() {
         borderWidth: 1,
       },
     ],
-  }
+  };
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Reportes y Analítica</h2>
       <div className="flex items-center space-x-4">
         <Label htmlFor="chartType">Tipo de Gráfico</Label>
-        <Select id="chartType" value={selectedChart} onChange={(e) => setSelectedChart(e.target.value)}>
+        <Select value={selectedChart} onValueChange={(value) => setSelectedChart(value)}>
           <option value="line">Línea</option>
           <option value="bar">Barras</option>
           <option value="pie">Circular</option>
@@ -85,5 +96,5 @@ export default function ReportsAndAnalytics() {
         <Button>Personalizar Análisis</Button>
       </div>
     </div>
-  )
+  );
 }

@@ -17,8 +17,13 @@ const ThemeToggle = dynamic(() => import("@/components/theme-toggle"), {
 });
 
 export default function ConversorMonedas() {
-  const { lastUpdate, loadTransactions, processTransaction } = useCurrency();
-  const { theme, setTheme } = useTheme();
+  const { processTransaction } = useCurrency();
+  const {
+    // Remover lastUpdate, loadTransactions, theme, setTheme
+  } = useCurrency();
+  const {
+    // Remover setTheme
+  } = useTheme();
   const [showDrawer, setShowDrawer] = useState(false);
   const [drawerData, setDrawerData] = useState<{
     amount: string;
@@ -65,8 +70,8 @@ export default function ConversorMonedas() {
 
       setShowDrawer(false);
       setShowSecurity(false);
-    } catch (error) {
-      // El error ya está manejado en processTransaction
+    } catch {
+      // Manejar el error sin la variable
     }
   };
 

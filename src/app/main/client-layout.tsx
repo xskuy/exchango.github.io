@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Home, Users, DollarSign, Settings2, LogOut, ChevronsUpDown, ChevronRight, Moon, Sun } from "lucide-react";
+import { Home, Users, DollarSign, Settings2, LogOut, ChevronsUpDown, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -31,7 +30,6 @@ import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useUser } from "@/context/user-context";
 import { useEffect } from "react";
-import { redirect } from "next/navigation";
 
 // Datos de navegación
 const navItems = [
@@ -45,16 +43,6 @@ const navItems = [
     title: "Converter",
     url: "/main/converter",
     icon: DollarSign,
-  },
-  {
-    title: "Transacciones",
-    url: "/main/transactions",
-    icon: DollarSign,
-  },
-  {
-    title: "Configuración",
-    url: "/main/settings",
-    icon: Settings2,
   },
 ];
 
@@ -126,10 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton size="lg">
                     <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage
-                        src={user?.image || session?.user?.image || ""}
-                        alt={user?.name || session?.user?.name || ""}
-                      />
+                      <AvatarImage src={session?.user?.image || ""} alt={user?.name || session?.user?.name || ""} />
                       <AvatarFallback className="rounded-lg">
                         {user?.name?.[0] || session?.user?.name?.[0] || "U"}
                       </AvatarFallback>

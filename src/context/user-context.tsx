@@ -10,6 +10,7 @@ type User = {
   name: string;
   email: string;
   role: string;
+  balance: number;
   transactions: any[];
   stats: {
     mostBoughtCurrency: [string, number];

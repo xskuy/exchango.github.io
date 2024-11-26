@@ -1,81 +1,90 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useSession, signOut } from 'next-auth/react'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  ArrowUpRight, Bell, ChevronDown, CreditCard, Download, 
-  Eye, EyeOff, History, HelpCircle, LogOut, QrCode, 
-  Search, Send, Settings, Copy 
-} from "lucide-react"
+import { useState, useEffect } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  ArrowUpRight,
+  CreditCard,
+  Download,
+  Eye,
+  EyeOff,
+  HelpCircle,
+  LogOut,
+  QrCode,
+  Search,
+  Send,
+  Settings,
+  Copy,
+} from "lucide-react";
 
 interface UserData {
-  id: number
-  name: string
-  email: string
-  role: string
-  walletId: string
-  status: string
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  walletId: string;
+  status: string;
   wallet: {
-    id: number
-    balance: number
-  }
-  transactions: any[]
+    id: number;
+    balance: number;
+  };
+  transactions: any[];
   stats?: {
-    mostBoughtCurrency?: [string, number]
+    mostBoughtCurrency?: [string, number];
     largestTransaction?: {
-      amount: number
+      amount: number;
       originCurrency: {
-        symbol: string
-      }
-      date: string
-    }
-    monthlyOperations?: number
-    favoriteConversion?: [string, number]
-  }
+        symbol: string;
+      };
+      date: string;
+    };
+    monthlyOperations?: number;
+    favoriteConversion?: [string, number];
+  };
 }
 
 const formatWalletId = (walletId: string) => {
   const lastTwelveChars = walletId.slice(-12);
-  const maskedPart = '•'.repeat(walletId.length - 12);
+  const maskedPart = "•".repeat(walletId.length - 12);
   return `${maskedPart}${lastTwelveChars}`;
 };
 
 export default function Profile() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true)
-  const [showBalance, setShowBalance] = useState(true)
-  const [userData, setUserData] = useState<UserData | null>(null)
-  const { data: session } = useSession()
+  const [isLoading, setIsLoading] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [showBalance, setShowBalance] = useState(true);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchUserData = async () => {
       if (session?.user?.email) {
         try {
-          setIsLoading(true)
-          const response = await fetch(`/api/user?email=${session.user.email}`)
+          setIsLoading(true);
+          const response = await fetch(`/api/user?email=${session.user.email}`);
           if (response.ok) {
-            const data = await response.json()
-            setUserData(data)
+            const data = await response.json();
+            setUserData(data);
           }
         } catch (error) {
-          console.error('Error fetching user data:', error)
+          console.error("Error fetching user data:", error);
         } finally {
-          setIsLoading(false)
+          setIsLoading(false);
         }
       }
-    }
+    };
 
-    fetchUserData()
-  }, [session])
+    fetchUserData();
+  }, [session]);
 
   if (isLoading) {
     return (
@@ -85,7 +94,7 @@ export default function Profile() {
           <p className="mt-2">Cargando...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!userData) {
@@ -93,36 +102,31 @@ export default function Profile() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <p>No se pudo cargar la información del usuario.</p>
-          <Button 
-            variant="outline" 
-            className="mt-4"
-            onClick={() => window.location.reload()}
-          >
+          <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
             Reintentar
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   const copyWalletId = () => {
     if (userData?.walletId) {
       navigator.clipboard.writeText(userData.walletId);
     }
-  }
+  };
 
   const formatTransaction = (transaction: any) => {
     return {
-      title: transaction.type === 'DEPOSIT' ? 'Recarga' : 
-             transaction.type === 'WITHDRAWAL' ? 'Retiro' : 
-             'Transferencia',
+      title:
+        transaction.type === "DEPOSIT" ? "Recarga" : transaction.type === "WITHDRAWAL" ? "Retiro" : "Transferencia",
       amount: transaction.amount,
       symbol: transaction.originCurrency.symbol,
       date: new Date(transaction.date).toLocaleDateString(),
       type: transaction.type,
-      isPositive: transaction.type === 'DEPOSIT'
-    }
-  }
+      isPositive: transaction.type === "DEPOSIT",
+    };
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,10 +159,10 @@ export default function Profile() {
                 <p className="text-muted-foreground">{userData.email}</p>
                 <div className="flex items-center mt-2">
                   <p className="text-sm mr-2">
-                    Wallet ID: {userData?.walletId ? formatWalletId(userData.walletId) : '•••••••'}
+                    Wallet ID: {userData?.walletId ? formatWalletId(userData.walletId) : "•••••••"}
                   </p>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="icon"
                     className="h-4 w-4 p-0"
                     onClick={copyWalletId}
@@ -170,7 +174,7 @@ export default function Profile() {
               </div>
               <Badge variant="secondary">{userData.role}</Badge>
             </div>
-            
+
             <Card className="mb-8">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Saldo actual</CardTitle>
@@ -180,12 +184,13 @@ export default function Profile() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {showBalance ? `$${userData.wallet.balance.toFixed(2) || '0.00'}` : "••••••"}
+                  {showBalance ? `$${userData.wallet.balance.toFixed(2) || "0.00"}` : "••••••"}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Última actividad: {userData.transactions[0]?.date ? 
-                    new Date(userData.transactions[0].date).toLocaleString() : 
-                    'Sin actividad'}
+                  Última actividad:{" "}
+                  {userData.transactions[0]?.date
+                    ? new Date(userData.transactions[0].date).toLocaleString()
+                    : "Sin actividad"}
                 </p>
               </CardContent>
             </Card>
@@ -207,7 +212,7 @@ export default function Profile() {
             <TabsTrigger value="transactions">Transacciones</TabsTrigger>
             <TabsTrigger value="settings">Configuración</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview" className="space-y-4">
             <Card>
               <CardHeader>
@@ -239,7 +244,7 @@ export default function Profile() {
                 {userData.stats?.largestTransaction && (
                   <div>
                     <p className="text-2xl font-bold">
-                      {userData.stats.largestTransaction.amount} 
+                      {userData.stats.largestTransaction.amount}
                       {userData.stats.largestTransaction.originCurrency.symbol}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -283,7 +288,7 @@ export default function Profile() {
                 </div>
                 <ul className="mt-4 space-y-2">
                   {userData.transactions.map((transaction, index) => {
-                    const formattedTx = formatTransaction(transaction)
+                    const formattedTx = formatTransaction(transaction);
                     return (
                       <li key={index} className="flex justify-between items-center">
                         <div>
@@ -291,11 +296,11 @@ export default function Profile() {
                           <p className="text-sm text-muted-foreground">{formattedTx.date}</p>
                         </div>
                         <span className={formattedTx.isPositive ? "text-green-500" : "text-red-500"}>
-                          {formattedTx.isPositive ? '+' : '-'}
+                          {formattedTx.isPositive ? "+" : "-"}
                           {formattedTx.amount} {formattedTx.symbol}
                         </span>
                       </li>
-                    )
+                    );
                   })}
                 </ul>
               </CardContent>
@@ -312,10 +317,12 @@ export default function Profile() {
                   <Label htmlFor="2fa">Autenticación de dos factores (2FA)</Label>
                   <Switch id="2fa" />
                 </div>
-                <Button variant="outline" className="w-full">Cambiar contraseña</Button>
+                <Button variant="outline" className="w-full">
+                  Cambiar contraseña
+                </Button>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Opciones de cuenta</CardTitle>
@@ -323,11 +330,7 @@ export default function Profile() {
               <CardContent className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="notifications">Notificaciones</Label>
-                  <Switch
-                    id="notifications"
-                    checked={notificationsEnabled}
-                    onCheckedChange={setNotificationsEnabled}
-                  />
+                  <Switch id="notifications" checked={notificationsEnabled} onCheckedChange={setNotificationsEnabled} />
                 </div>
                 <Button variant="outline" className="w-full">
                   <Download className="mr-2 h-4 w-4" />
@@ -355,5 +358,5 @@ export default function Profile() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

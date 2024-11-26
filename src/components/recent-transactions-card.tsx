@@ -55,10 +55,10 @@ export function RecentTransactionsCard() {
               </div>
               <div className="text-right">
                 <div className="font-medium">
-                  {conversion.result.toFixed(2)} {conversion.destinationCurrency.symbol}
+                  {conversion.result.toFixed(2)} {/* Need to get currency symbol from somewhere */}
                 </div>
                 <div className="text-sm text-gray-600">
-                  -{conversion.amount.toFixed(2)} {conversion.originCurrency.symbol}
+                  -{conversion.amount.toFixed(2)} {/* Need to get currency symbol from somewhere */}
                 </div>
               </div>
             </div>

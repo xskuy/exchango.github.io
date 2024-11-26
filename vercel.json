@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": [
+    "cdg1"
+  ],
+  "env": {
+    "NEXTAUTH_URL": "https://tu-dominio.vercel.app",
+    "NEXTAUTH_SECRET": "@nextauth_secret",
+    "DATABASE_URL": "@database_url"
+  }
+}

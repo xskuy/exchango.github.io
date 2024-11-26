@@ -18,8 +18,8 @@ async function GET(request: Request) {
       });
     }
     return NextResponse.json({ result: "error", "error-type": data["error-type"] }, { status: 400 });
-  } catch (error) {
-    return NextResponse.json({ result: "error", "error-type": 'Error fetching exchange rate' }, { status: 500 });
+  } catch {
+    return new Response("Error fetching exchange rate", { status: 500 });
   }
 }
 
