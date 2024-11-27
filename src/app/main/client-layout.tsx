@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 import { Home, Users, DollarSign, Settings2, LogOut, ChevronsUpDown, ChevronRight, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 
@@ -147,14 +147,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   align="end"
                   sideOffset={4}
                 >
-                  {user?.role === "admin" && (
+                  {console.log("User role:", user?.role)}
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                      <Link href="/main/users" className="flex items-center w-full">
+                        <Users className="mr-2 h-4 w-4" />
+                        Mi Perfil
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </DropdownMenuGroup>
+                  {(user?.role === "admin" || user?.role === "ADMIN") && (
                     <DropdownMenuGroup>
                       <DropdownMenuItem asChild>
-                        <Link href="/main/users">
+                        <Link href="/main/users" className="flex items-center w-full">
                           <Users className="mr-2 h-4 w-4" />
-                          Usuarios
+                          Gestionar Usuarios
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                     </DropdownMenuGroup>
                   )}
                   <DropdownMenuGroup>
