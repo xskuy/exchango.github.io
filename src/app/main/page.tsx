@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -35,7 +35,7 @@ const priceData = [
 export default function Dashboard() {
   const { data: session } = useSession();
   const { user, loading: userLoading, fetchUser } = useUser();
-  const { dashboardData, loading: dashboardLoading, fetchDashboardData } = useDashboard();
+  const { dashboardData, loading: dashboardLoading } = useDashboard();
 
   useEffect(() => {
     if (!session?.user?.email) return;
@@ -52,7 +52,7 @@ export default function Dashboard() {
     return "Good evening";
   };
 
-  const balance = user?.wallet?.balance || 0;
+  const balance = user?.balance || 0;
   const transactions = user?.transactions || [];
 
   return !user || userLoading ? (
@@ -104,8 +104,8 @@ export default function Dashboard() {
                   {dashboardLoading ? "Cargando..." : dashboardData?.totalTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.transactionChange > 0 ? "+" : ""}
-                  {dashboardData?.transactionChange?.toFixed(1)}% respecto a ayer
+                  {(dashboardData?.transactionChange || 0) > 0 ? "+" : ""}
+                  {(dashboardData?.transactionChange || 0).toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -119,8 +119,8 @@ export default function Dashboard() {
                   {dashboardLoading ? "Cargando..." : dashboardData?.activeTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.transactionChange > 0 ? "+" : ""}
-                  {dashboardData?.transactionChange?.toFixed(1)}% respecto a ayer
+                  {(dashboardData?.transactionChange || 0) > 0 ? "+" : ""}
+                  {(dashboardData?.transactionChange || 0).toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -134,8 +134,8 @@ export default function Dashboard() {
                   {dashboardLoading ? "Cargando..." : dashboardData?.totalCryptocurrencies || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.totalCryptocurrenciesChange > 0 ? "+" : ""}
-                  {dashboardData?.totalCryptocurrenciesChange?.toFixed(1)}% respecto a la semana pasada
+                  {(dashboardData?.totalCryptocurrenciesChange ?? 0) > 0 ? "+" : ""}
+                  {(dashboardData?.totalCryptocurrenciesChange ?? 0).toFixed(1)}% respecto a la semana pasada
                 </p>
               </CardContent>
             </Card>
@@ -327,8 +327,8 @@ export default function Dashboard() {
                   {dashboardLoading ? "Cargando..." : dashboardData?.newUsers || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.newUsersChange > 0 ? "+" : ""}
-                  {dashboardData?.newUsersChange?.toFixed(1)}% respecto a ayer
+                  {(dashboardData?.newUsersChange ?? 0) > 0 ? "+" : ""}
+                  {(dashboardData?.newUsersChange ?? 0).toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -342,8 +342,8 @@ export default function Dashboard() {
                   {dashboardLoading ? "Cargando..." : dashboardData?.transactionsVolume || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.transactionsVolumeChange > 0 ? "+" : ""}
-                  {dashboardData?.transactionsVolumeChange?.toFixed(1)}% respecto a ayer
+                  {(dashboardData?.transactionsVolumeChange ?? 0) > 0 ? "+" : ""}
+                  {(dashboardData?.transactionsVolumeChange ?? 0).toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -357,8 +357,8 @@ export default function Dashboard() {
                   {dashboardLoading ? "Cargando..." : dashboardData?.completedTransactions || 0}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.completedTransactionsChange > 0 ? "+" : ""}
-                  {dashboardData?.completedTransactionsChange?.toFixed(1)}% respecto a ayer
+                  {(dashboardData?.completedTransactionsChange ?? 0) > 0 ? "+" : ""}
+                  {(dashboardData?.completedTransactionsChange ?? 0).toFixed(1)}% respecto a ayer
                 </p>
               </CardContent>
             </Card>
@@ -372,8 +372,8 @@ export default function Dashboard() {
                   {dashboardLoading ? "Cargando..." : dashboardData?.mostTradedCurrency || ""}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {dashboardData?.mostTradedCurrencyChange > 0 ? "+" : ""}
-                  {dashboardData?.mostTradedCurrencyChange?.toFixed(1)}% respecto a la semana pasada
+                  {(dashboardData?.mostTradedCurrencyChange ?? 0) > 0 ? "+" : ""}
+                  {(dashboardData?.mostTradedCurrencyChange ?? 0).toFixed(1)}% respecto a la semana pasada
                 </p>
               </CardContent>
             </Card>

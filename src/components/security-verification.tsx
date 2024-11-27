@@ -14,10 +14,6 @@ import {
   Shield,
   X,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Card } from "@/components/ui/card";
 
 interface SecurityVerificationProps {
   onClose: () => void;

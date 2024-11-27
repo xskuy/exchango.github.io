@@ -1,33 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { useState } from "react";
+import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import styles from "./page.module.css"; // Importa los estilos
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { data: session, status } = useSession();
-
-  useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/main");
-    }
-  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (loading) return;
 
-    setIsLoading(true);
-    setError("");
+    setLoading(true);
 
     try {
       const result = await signIn("credentials", {
@@ -37,22 +27,18 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError("Invalid email or password");
+        // Manejar el error sin la variable
+        return new Response("Invalid email or password", { status: 400 });
       } else {
         router.push("/main");
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("An error occurred during login");
+      return new Response("An error occurred during login", { status: 500 });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-
-  // Si está cargando la sesión, muestra un estado de carga
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center relative">
@@ -104,10 +90,10 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={loading}
             className="w-full py-2 bg-[#7C3AED] hover:bg-[#6D28D9] rounded-lg text-white font-medium"
           >
-            {isLoading ? "Signing in..." : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </Button>
 
           <div className="text-center text-sm">

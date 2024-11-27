@@ -1,5 +1,6 @@
 "use client";
 
+import { Conversion } from "@prisma/client";
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -59,7 +60,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
   const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleTimeString());
   const [isLoading, setIsLoading] = useState(false);
-  const [balance, setBalance] = useState<UserBalance>({
+  const [balance] = useState<UserBalance>({
     amount: 1234.56,
     currency: "USD",
   });

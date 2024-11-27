@@ -3,6 +3,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Star } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area } from "recharts";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 interface PopularCurrenciesProps {
   currencies: Array<{

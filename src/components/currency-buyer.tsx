@@ -17,19 +17,11 @@ export default function CurrencyBuyer({
 }: {
   onShowDrawer: (data: { amount: string; currency: string; exchangeRate: number }) => void;
 }) {
-  const {
-    lastUpdate,
-    getExchangeRate,
-    balance,
-    availablePaymentMethods,
-    selectedPaymentMethod,
-    setSelectedPaymentMethod,
-    loadTransactions,
-  } = useCurrency();
+  const { getExchangeRate, balance, availablePaymentMethods, selectedPaymentMethod, setSelectedPaymentMethod } =
+    useCurrency();
 
   const [spendAmount, setSpendAmount] = useState("");
   const [targetCurrency, setTargetCurrency] = useState("EUR");
-  const [isLoading, setIsLoading] = useState(false);
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
 
   useEffect(() => {
@@ -70,37 +62,6 @@ export default function CurrencyBuyer({
       currency: targetCurrency,
       exchangeRate: exchangeRate,
     });
-  };
-
-  const handleFinalConfirmation = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/conversion", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: spendAmount,
-          fromCurrency: "USD",
-          toCurrency: targetCurrency,
-          result: calculateReceiveAmount(),
-          exchangeRate: exchangeRate,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al procesar la compra");
-      }
-
-      await loadTransactions();
-      toast.success("Compra realizada con éxito");
-      setSpendAmount("");
-    } catch (error) {
-      console.error("Error details:", error);
-      toast.error(error instanceof Error ? error.message : "Error al procesar la compra");
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const formatBalance = (amount: number) => {
@@ -196,16 +157,9 @@ export default function CurrencyBuyer({
             className="w-full"
             size="lg"
             onClick={handleBuyConfirmation}
-            disabled={isLoading || !spendAmount || parseFloat(spendAmount) <= 0}
+            disabled={!spendAmount || parseFloat(spendAmount) <= 0}
           >
-            {isLoading ? (
-              <>
-                <RotateCw className="mr-2 h-4 w-4 animate-spin" />
-                Procesando...
-              </>
-            ) : (
-              "Continuar"
-            )}
+            Continuar
           </Button>
         </div>
       </CardContent>
