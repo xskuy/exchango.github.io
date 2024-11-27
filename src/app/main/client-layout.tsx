@@ -132,7 +132,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   align="end"
                   sideOffset={4}
                 >
-                  {console.log("User role:", user?.role)}
                   <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
                       <Link href="/main/users" className="flex items-center w-full">
